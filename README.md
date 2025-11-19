@@ -1,3 +1,10 @@
+Added ipl/ide gta sa import/export map (streams) support. stream ipls from gta sa need to be in non-binary format first before importing them with this addon. non binary stream ipls need to be placed in "streams" folder inside gta sa root folder (c:\gtasa\streams\lae_stream0.ipl for example).
+
+
+
+
+
+
 # DragonFF 🐉
 
 [![Discord](https://img.shields.io/discord/1286221154612281405.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/QxpkwNqeTr)
