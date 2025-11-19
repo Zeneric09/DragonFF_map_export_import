@@ -8,7 +8,7 @@ from .col_ot import EXPORT_OT_col, \
     COLLECTION_OT_dff_generate_bounds, \
     OBJECT_OT_dff_add_collision_box, OBJECT_OT_dff_add_collision_sphere
 from .ext_2dfx_menus import EXT2DFXObjectProps, EXT2DFXMenus
-from .map_ot import EXPORT_OT_ipl_cull
+from .map_ot import EXPORT_OT_ipl_cull, EXPORT_OT_map
 from .cull_menus import CULLObjectProps, CULLMenus
 from ..gtaLib.data import presets
 
@@ -247,6 +247,8 @@ class DFF_MT_ExportChoice(bpy.types.Menu):
                              text="DragonFF TXD (.txd)")
         self.layout.operator(EXPORT_OT_ipl_cull.bl_idname,
                              text="DragonFF CULL (.ipl)")
+        self.layout.operator(EXPORT_OT_map.bl_idname,
+                             text="DragonFF Map (.ipl, .ide)")
 
 
 #######################################################
@@ -417,6 +419,22 @@ class OBJECT_PT_dffObjects(bpy.types.Panel):
         CULLMenus.draw_menu(self.layout, context)
 
     #######################################################
+    def draw_map_properties(self, context):
+        """Draw map/IPL properties panel"""
+        layout = self.layout
+        settings = context.object.dff
+        
+        box = layout.box()
+        box.label(text="Map Properties (IPL/IDE)")
+        box.prop(settings, "object_id")
+        box.prop(settings, "model_name")
+        box.prop(settings, "txd_name")
+        box.prop(settings, "interior")
+        box.prop(settings, "lod")
+        box.prop(settings, "draw_distance")
+        box.prop(settings, "flags")
+
+    #######################################################
     def draw_obj_menu(self, context):
 
         layout = self.layout
@@ -428,8 +446,10 @@ class OBJECT_PT_dffObjects(bpy.types.Panel):
         if settings.type == 'OBJ':
             if object_type == 'MESH':
                 self.draw_mesh_menu(context)
+                self.draw_map_properties(context)
             elif object_type == 'EMPTY':
                 self.draw_empty_menu(context)
+                self.draw_map_properties(context)
 
         elif settings.type == 'COL':
             if object_type == 'EMPTY':
@@ -728,6 +748,55 @@ compatibiility with DFF Viewers"
         min = 0,
         max = 2**31-1,
         options = {'SKIP_SAVE', 'HIDDEN'}
+    )
+
+    # Map/IPL properties
+    object_id : bpy.props.IntProperty(
+        name = "Object ID",
+        default = 0,
+        min = 0,
+        description = "Object ID for IPL/IDE files"
+    )
+    
+    model_name : bpy.props.StringProperty(
+        name = "Model Name",
+        default = "",
+        description = "Model name for IPL/IDE files (leave empty to use object name)"
+    )
+    
+    txd_name : bpy.props.StringProperty(
+        name = "TXD Name",
+        default = "",
+        description = "Texture dictionary name for IDE files (leave empty to use model name)"
+    )
+    
+    interior : bpy.props.IntProperty(
+        name = "Interior",
+        default = 0,
+        min = 0,
+        max = 255,
+        description = "Interior ID (0 = exterior)"
+    )
+    
+    lod : bpy.props.IntProperty(
+        name = "LOD",
+        default = -1,
+        min = -1,
+        description = "LOD object ID (-1 = no LOD)"
+    )
+    
+    draw_distance : bpy.props.FloatProperty(
+        name = "Draw Distance",
+        default = 150.0,
+        min = 0.0,
+        description = "Draw distance for IDE files"
+    )
+    
+    flags : bpy.props.IntProperty(
+        name = "Flags",
+        default = 0,
+        min = 0,
+        description = "Object flags for IDE files"
     )
 
     # Frame properties

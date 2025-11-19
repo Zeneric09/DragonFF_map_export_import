@@ -84,12 +84,22 @@ class map_importer:
                 if obj.parent in cached_objects:
                     new_objects[obj].parent = new_objects[obj.parent]
 
-            # Position root object
+            # Position root object and set map properties
             for obj in new_objects.values():
                 if not obj.parent:
                     self.apply_transformation_to_object(
                         obj, inst
                     )
+                    # Set map properties
+                    obj.dff.object_id = int(inst.id)
+                    obj.dff.model_name = model
+                    obj.dff.txd_name = txd
+                    obj.dff.interior = int(inst.interior) if hasattr(inst, 'interior') else 0
+                    obj.dff.lod = int(inst.lod) if hasattr(inst, 'lod') else -1
+                    if inst.id in self.object_data:
+                        obj_data = self.object_data[inst.id]
+                        obj.dff.draw_distance = float(obj_data.drawDistance) if hasattr(obj_data, 'drawDistance') else 150.0
+                        obj.dff.flags = int(obj_data.flags) if hasattr(obj_data, 'flags') else 0
 
             cached_2dfx = [obj for obj in model_cache if obj.dff.type == "2DFX"]
             for obj in cached_2dfx:
@@ -115,7 +125,7 @@ class map_importer:
                     context.collection.objects.link(new_obj)
                 new_objects[obj] = new_obj
 
-            print(str(inst.id), 'loaded from cache')
+            print(f"{inst.id} ({model}) loaded from cache")
         else:
 
             dff_filename = "%s.dff" % model
@@ -126,7 +136,7 @@ class map_importer:
 
             # Import dff from a file if file exists
             if not dff_filepath:
-                print("DFF not found:", os.path.join(self.settings.dff_folder, dff_filename))
+                print(f"DFF not found: {dff_filename} (ID: {inst.id}) - Path: {os.path.join(self.settings.dff_folder, dff_filename)}")
                 return
 
             txd_images = {}
@@ -144,9 +154,7 @@ class map_importer:
 
             importer = dff_importer.import_dff(
                 {
-                    'file_name'      : "%s/%s.dff" % (
-                        self.settings.dff_folder, model
-                    ),
+                    'file_name'      : dff_filepath,
                     'txd_images'       : txd_images,
                     'image_ext'        : 'PNG',
                     'connect_bones'    : False,
@@ -183,7 +191,7 @@ class map_importer:
 
             # Save into buffer
             self.model_cache[inst.id] = collection_objects
-            print(str(inst.id), 'loaded new')
+            print(f"{inst.id} ({model}) loaded new")
 
         # Look for collision mesh
         name = self.model_cache[inst.id][0].name
@@ -295,6 +303,9 @@ class map_importer:
         self.collision_collection = None
         self.cull_collection = None
         self.settings = settings
+        
+        # Strip trailing slashes from paths to prevent double slashes
+        self.settings.dff_folder = self.settings.dff_folder.rstrip('/')
 
         if self.settings.use_custom_map_section:
             self.map_section = self.settings.custom_ipl_path

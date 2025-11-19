@@ -55,9 +55,13 @@ class SectionUtility:
             # Split line and trim individual elements
             line_params = [e.strip() for e in line.split(",")]
 
-            # Append file name for IDEs (needed for collision lookups)
+            # Append file name for IDEs only (needed for collision lookups)
+            # Check if this is an IDE file AND if this section needs filename
             filename = os.path.basename(file_stream.name)
-            if filename.lower().endswith('.ide'):
+            is_ide_file = filename.lower().endswith('.ide')
+            
+            # Only add filename for IDE sections that need it (objs, tobj, etc.)
+            if is_ide_file and self.section_name in ['objs', 'tobj', 'anim', 'weap']:
                 line_params.append(filename)
 
             # Get the correct data structure for this section entry
@@ -277,16 +281,33 @@ class MapDataUtility:
         self = MapDataUtility
 
         ipl = {}
+        basename = os.path.basename(ipl_section)
+        
+        # First priority: Check streams folder for stream IPL files (case-insensitive)
+        streams_folder = os.path.join(game_root, 'streams')
+        if os.path.isdir(streams_folder):
+            # Try case-insensitive match in streams folder
+            try:
+                entries = os.listdir(streams_folder)
+                match = next((entry for entry in entries if entry.lower() == basename.lower()), None)
+                if match:
+                    streams_path = os.path.join(streams_folder, match)
+                    print('\nMapDataUtility reading from streams folder:', streams_path)
+                    sections = self.read_file(streams_path, data_structures, aliases)
+                    return self.merge_dols(ipl, sections)
+            except (FileNotFoundError, PermissionError):
+                pass
+        
+        # Second priority: Check standard path
         fullpath = self.get_full_path(game_root, ipl_section)
         print('\nMapDataUtility reading:', fullpath)
 
         if not os.path.isfile(fullpath):
-             # If not found, look for it inside gta3.img
+            # Third priority: Look for it inside gta3.img
             imgpath = os.path.join(game_root, 'models/gta3.img')
 
             try:
                 with img.open(imgpath) as img_file:
-                    basename = os.path.basename(ipl_section)
                     entry_idx = img_file.find_entry_idx(basename)
 
                     if entry_idx > -1:

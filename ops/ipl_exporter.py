@@ -59,9 +59,40 @@ class ipl_exporter:
         """Format an object as an inst line based on game version"""
 
         self = ipl_exporter
-
-        # TODO
-        return ""
+        
+        # Get object properties
+        obj_id = obj.dff.get('object_id', 0)
+        model_name = obj.dff.get('model_name', obj.name.split('.')[0])
+        interior = obj.dff.get('interior', 0)
+        lod = obj.dff.get('lod', -1)
+        
+        # Get position
+        pos = obj.location
+        
+        # Get rotation (quaternion)
+        rot = obj.rotation_quaternion
+        
+        # Get scale (only for GTA III/VC)
+        scale = obj.scale
+        
+        # Format based on game version
+        from ..gtaLib.data.map_data import game_version
+        
+        if self.game_id == game_version.III:
+            # GTA III: id, modelName, posX, posY, posZ, scaleX, scaleY, scaleZ, rotX, rotY, rotZ, rotW
+            return f"{obj_id}, {model_name}, {pos.x}, {pos.y}, {pos.z}, {scale.x}, {scale.y}, {scale.z}, {rot.x}, {rot.y}, {rot.z}, {rot.w}"
+        
+        elif self.game_id == game_version.VC:
+            # GTA VC: id, modelName, interior, posX, posY, posZ, scaleX, scaleY, scaleZ, rotX, rotY, rotZ, rotW
+            return f"{obj_id}, {model_name}, {interior}, {pos.x}, {pos.y}, {pos.z}, {scale.x}, {scale.y}, {scale.z}, {rot.x}, {rot.y}, {rot.z}, {rot.w}"
+        
+        elif self.game_id == game_version.SA:
+            # GTA SA: id, modelName, interior, posX, posY, posZ, rotX, rotY, rotZ, rotW, lod
+            return f"{obj_id}, {model_name}, {interior}, {pos.x}, {pos.y}, {pos.z}, {rot.x}, {rot.y}, {rot.z}, {rot.w}, {lod}"
+        
+        else:
+            # Default to SA format
+            return f"{obj_id}, {model_name}, {interior}, {pos.x}, {pos.y}, {pos.z}, {rot.x}, {rot.y}, {rot.z}, {rot.w}, {lod}"
 
     #######################################################
     @staticmethod

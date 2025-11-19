@@ -140,14 +140,14 @@ class DFFSceneProps(bpy.types.PropertyGroup):
 
     game_root : bpy.props.StringProperty(
         name = 'Game root',
-        default = 'C:/Program Files (x86)/Steam/steamapps/common/',
+        default = '/run/media/zeneric/NVME/GAMES/ingamesubszen/GTA San Andreas/',
         description = "Folder with the game's executable",
         subtype = 'DIR_PATH'
     )
 
     dff_folder : bpy.props.StringProperty(
         name = 'Dff folder',
-        default = 'C:/Users/blaha/Documents/GitHub/DragonFF/tests/dff',
+        default = '/run/media/zeneric/HDD1/documents/_dev',
         description = "Define a folder where all of the dff models are stored.",
         subtype = 'DIR_PATH'
     )

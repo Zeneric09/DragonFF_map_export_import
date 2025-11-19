@@ -101,8 +101,8 @@ class SCENE_OT_dff_import_map(bpy.types.Operator):
 
                     try:
                         importer.import_object_instance(context, inst)
-                    except:
-                        print("Can`t import model... skipping")
+                    except Exception as e:
+                        print(f"Error importing model (ID: {inst.id}): {type(e).__name__}: {str(e)}")
 
                     self._progress_current += 1
 
@@ -252,6 +252,72 @@ class EXPORT_OT_ipl_cull(bpy.types.Operator, ExportHelper):
 
         except Exception as e:
             self.report({"ERROR"}, str(e))
+
+        return {'FINISHED'}
+
+#######################################################
+class EXPORT_OT_map(bpy.types.Operator, ExportHelper):
+
+    bl_idname           = "export_scene.dff_map"
+    bl_description      = "Export a GTA Map (IPL/IDE)"
+    bl_label            = "DragonFF Map (.ipl, .ide)"
+    filename_ext        = ".ipl"
+
+    filepath            : bpy.props.StringProperty(name="File path",
+                                              maxlen=1024,
+                                              default="",
+                                              subtype='FILE_PATH')
+
+    filter_glob         : bpy.props.StringProperty(default="*.ipl",
+                                              options={'HIDDEN'})
+
+    only_selected       : bpy.props.BoolProperty(
+        name            = "Only Selected",
+        default         = False
+    )
+    
+    export_ide          : bpy.props.BoolProperty(
+        name            = "Export IDE",
+        description     = "Also export IDE file with object definitions",
+        default         = True
+    )
+
+    #######################################################
+    def draw(self, context):
+        layout = self.layout
+
+        layout.prop(self, "only_selected")
+        layout.prop(self, "export_ide")
+        layout.prop(context.scene.dff, "game_version_dropdown", text="Game")
+
+    #######################################################
+    def execute(self, context):
+
+        start = time.time()
+        try:
+            from ..ops import map_exporter
+            
+            success = map_exporter.export_map(
+                {
+                    "file_name"     : self.filepath,
+                    "only_selected" : self.only_selected,
+                    "game_id"       : context.scene.dff.game_version_dropdown,
+                    "export_ide"    : self.export_ide,
+                }
+            )
+
+            if not success:
+                report = "No objects with map data found"
+                self.report({"ERROR"}, report)
+                return {'CANCELLED'}
+
+            self.report({"INFO"}, f"Finished export in {time.time() - start:.2f}s")
+
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.report({"ERROR"}, str(e))
+            return {'CANCELLED'}
 
         return {'FINISHED'}
 
